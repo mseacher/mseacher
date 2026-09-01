@@ -39,7 +39,7 @@ BLOCKED_TERMS = {"msebengi", "alimasi", "mse"}
 class SearchRequest(BaseModel):
     criteria: dict
 
-def obtenir_cles_disponibles(nombre=1):
+def obtenir_cles_disponibles(nombre=3):
     """Récupère un pool de clés pour la recherche"""
     with key_lock:
         if not API_KEYS:
@@ -129,10 +129,10 @@ def run_search(req: SearchRequest):
     tous_les_resultats = []
     
     # Utilisation d'une seule clé pour le test de performance
-    cles_a_utiliser = obtenir_cles_disponibles(nombre=1)
+    cles_a_utiliser = obtenir_cles_disponibles(nombre=3)
     
     try:
-        with ThreadPoolExecutor(max_workers=1) as executor:
+        with ThreadPoolExecutor(max_workers=3) as executor:
             future_to_key = {executor.submit(fetch_with_key, payload, key): key for key in cles_a_utiliser}
             for future in as_completed(future_to_key):
                 try:
