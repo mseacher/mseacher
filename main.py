@@ -100,7 +100,7 @@ def filtrer_profils(results, criteria):
                 if valeur_recherchee not in valeur_profil:
                     rejete = True
                     break
-                    
+                
         if rejete:
             continue
         
@@ -139,7 +139,6 @@ def fetch_page(payload, page):
         try:
             response = requests.post(f"{BASE_URL}/search", headers=headers, json=data_payload, timeout=10)
             
-            # Gestion sécurisée du quota dans les en-têtes
             remaining = response.headers.get("x-ratelimit-remaining-day")
             if remaining is not None:
                 try:
@@ -161,7 +160,6 @@ def fetch_page(payload, page):
                     if isinstance(results, list):
                         return results
                 except ValueError:
-                    # Erreur si la réponse n'est pas du JSON valide (ex: HTML Cloudflare)
                     pass
                 
         except (requests.exceptions.RequestException, Exception):
@@ -170,6 +168,10 @@ def fetch_page(payload, page):
         attempts += 1
     return []
 
+@app.get("/")
+def read_root():
+    return {"status": "online", "message": "Bienvenue sur l'API Mseacher ! Le backend fonctionne."}
+
 @app.post("/api/search")
 def run_search(req: SearchRequest):
     if not req.criteria or not isinstance(req.criteria, dict):
@@ -177,7 +179,6 @@ def run_search(req: SearchRequest):
         
     criteria = req.criteria.copy()
     
-    # Sécurité globale sur les termes bloqués
     for val in criteria.values():
         if val:
             val_clean = str(val).lower().strip()
