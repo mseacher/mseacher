@@ -1,11 +1,12 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import requests
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import traceback
 
-app = FastAPI(title="Mseacher API Backend")
+app = FastAPI(title="Mseacher API Backend - Multi-Key Mode")
 
 app.add_middleware(
     CORSMiddleware,
@@ -38,15 +39,18 @@ BLOCKED_TERMS = {"msebengi", "alimasi", "mse"}
 class SearchRequest(BaseModel):
     criteria: dict
 
-def obtenir_meilleure_cle():
+def obtenir_cles_disponibles(nombre=1):
+    """Récupère un pool de plusieurs clés différentes pour paralléliser"""
     with key_lock:
         if not API_KEYS:
-            return None
+            return []
+        # Trie les clés par quota décroissant et en prend plusieurs
         sorted_keys = sorted(API_KEYS, key=lambda k: key_quotas.get(k, 0), reverse=True)
-        return sorted_keys[0]
+        return sorted_keys[:nombre]
 
 def filtrer_profils(results, criteria):
     if not isinstance(results, list):
+        print(f"[DEBUG] filtrer_profils: results n'est pas une liste -> {type(results)}")
         return []
         
     profils_propres = []
@@ -60,24 +64,23 @@ def filtrer_profils(results, criteria):
         if not isinstance(res, dict):
             continue
             
-        # Anti-doublons sécurisé
-        unique_key = tuple(sorted(str(v) for k, v in res.items() if k in ["email", "telephone", "adresse"] and v))
+        # Clé unique pour éviter les doublons stricts
+        unique_key = tuple(sorted(str(v) for k, v in res.items() if k in ["email", "telephone", "adresse", "id"] and v))
         if unique_key and unique_key in seen_ids:
             continue
         if unique_key:
             seen_ids.add(unique_key)
 
-        # 1. Sécurité (termes bloqués)
+        # 1. Sécurité
         try:
             if any(any(term in str(v).lower() for term in BLOCKED_TERMS) for v in res.values()):
                 continue
         except Exception:
             continue
             
-        # 2. Filtrage intelligent de la date
+        # 2. Date
         if req_a or req_m or req_j:
             res_date = str(res.get("Naissance") or res.get("date_naissance") or res.get("birth_date") or res.get("dob") or "").strip()
-            
             if not res_date:
                 continue
                 
@@ -85,11 +88,10 @@ def filtrer_profils(results, criteria):
             if req_a and req_a not in res_date: rejete_date = True
             if req_m and req_m not in res_date: rejete_date = True
             if req_j and req_j not in res_date: rejete_date = True
-            
             if rejete_date:
                 continue
 
-        # 3. Filtrage du texte
+        # 3. Texte
         rejete = False
         champs_a_verifier = ["ville", "nom_famille", "prenom", "email", "telephone"]
         
@@ -122,50 +124,36 @@ def filtrer_profils(results, criteria):
     profils_propres.sort(key=score_fiabilite, reverse=True)
     return profils_propres
 
-def fetch_page(payload, page):
-    data_payload = payload.copy()
-    data_payload["page"] = page
+def fetch_with_key(payload, key):
+    """Exécute une requête de recherche avec une clé spécifique"""
+    headers = {"X-API-Key": key, "Content-Type": "application/json"}
     
-    attempts = 0
-    total_keys = len(API_KEYS) if API_KEYS else 1
-    
-    while attempts < total_keys * 2:
-        key = obtenir_meilleure_cle()
-        if not key:
-            break
-            
-        headers = {"X-API-Key": key, "Content-Type": "application/json"}
+    try:
+        response = requests.post(f"{BASE_URL}/search", headers=headers, json=payload, timeout=8)
+        print(f"[DEBUG] Requête avec clé {key[:10]}... - Status Code: {response.status_code}")
         
-        try:
-            response = requests.post(f"{BASE_URL}/search", headers=headers, json=data_payload, timeout=10)
-            
-            remaining = response.headers.get("x-ratelimit-remaining-day")
-            if remaining is not None:
-                try:
-                    with key_lock:
-                        key_quotas[key] = int(remaining)
-                except ValueError:
-                    pass
-            
-            if response.status_code == 429:
+        remaining = response.headers.get("x-ratelimit-remaining-day")
+        if remaining is not None:
+            try:
                 with key_lock:
-                    key_quotas[key] = 0
-                attempts += 1
-                continue
-                
-            if response.status_code == 200:
-                try:
-                    json_data = response.json()
-                    results = json_data.get("data", {}).get("results", [])
-                    if isinstance(results, list):
-                        return results
-                except ValueError:
-                    pass
-                
-        except (requests.exceptions.RequestException, Exception):
-            pass
+                    key_quotas[key] = int(remaining)
+            except ValueError:
+                pass
+        
+        if response.status_code == 429:
+            with key_lock:
+                key_quotas[key] = 0
+            return []
             
-        attempts += 1
+        if response.status_code == 200:
+            json_data = response.json()
+            results = json_data.get("data", {}).get("results", [])
+            if isinstance(results, list):
+                return results
+                
+    except Exception as e:
+        print(f"[DEBUG] Erreur requête avec clé {key[:10]}: {e}")
+        
     return []
 
 @app.get("/")
@@ -174,6 +162,8 @@ def read_root():
 
 @app.post("/api/search")
 def run_search(req: SearchRequest):
+    print(f"[DEBUG] Requête reçue avec les critères : {req.criteria}")
+    
     if not req.criteria or not isinstance(req.criteria, dict):
         raise HTTPException(status_code=400, detail="Critères de recherche invalides.")
         
@@ -197,22 +187,27 @@ def run_search(req: SearchRequest):
             criteria["date_naissance"] = req_a
 
     tous_les_resultats = []
-    pages_a_recuperer = list(range(1, 11))
+    
+    # On récupère 3 clés différentes pour lancer 3 requêtes en parallèle sur la page 1
+    # (Puisque la pagination > 1 est bloquée, utiliser plusieurs clés permet d'élargir la collecte si l'API renvoie des variations ou de sécuriser le flux)
+    cles_a_utiliser = obtenir_cles_disponibles(nombre=1)
     
     try:
-        with ThreadPoolExecutor(max_workers=5) as executor:
-            future_to_page = {executor.submit(fetch_page, criteria, p): p for p in pages_a_recuperer}
-            for future in as_completed(future_to_page):
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            future_to_key = {executor.submit(fetch_with_key, criteria, key): key for key in cles_a_utiliser}
+            for future in as_completed(future_to_key):
                 try:
                     res = future.result()
                     if res:
                         tous_les_resultats.extend(res)
-                except Exception:
-                    pass
-    except Exception:
+                except Exception as e:
+                    print(f"[DEBUG] Erreur thread clé: {e}")
+    except Exception as e:
+        print(f"[DEBUG] Erreur critique ThreadPool: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail="Erreur interne lors du traitement en parallèle.")
 
     profils_finaux = filtrer_profils(tous_les_resultats, req.criteria)
+    print(f"[DEBUG] Recherche terminée. Résultats uniques totaux : {len(profils_finaux)}")
     
     return {
         "status": 200,
@@ -224,3 +219,7 @@ def run_search(req: SearchRequest):
             "total": len(profils_finaux)
         }
     }
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
