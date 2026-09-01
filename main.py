@@ -100,7 +100,7 @@ def run_search(req: SearchRequest):
                     raise HTTPException(status_code=400, detail="Recherche non autorisée.")
 
     # Construction du payload officiel accepté par l'API BrixHub
-    payload = {"flexible": True} # Activé pour éviter les blocages stricts de correspondance exacte
+    payload = {"flexible": True} # Mode approximatif pour maximiser les correspondances
     
     champs_standards = ["nom_famille", "prenom", "ville", "code_postal", "email", "telephone", "siret", "siren", "iban"]
     for champ in champs_standards:
@@ -108,20 +108,27 @@ def run_search(req: SearchRequest):
         if valeur:
             payload[champ] = str(valeur).strip()
 
-    # Gestion propre des critères de date selon la documentation BrixHub
+    # Gestion de la date selon les paramètres exacts de la doc BrixHub
     req_a = str(criteria.get("dob_annee", "")).strip()
-    req_m = str(criteria.get("dob_mois", "")).strip().zfill(2) if criteria.get("dob_mois") else ""
-    req_j = str(criteria.get("dob_jour", "")).strip().zfill(2) if criteria.get("dob_jour") else ""
+    req_m = str(criteria.get("dob_mois", "")).strip()
+    req_j = str(criteria.get("dob_jour", "")).strip()
 
     if req_a:
-        if req_m and req_j:
-            payload["date_naissance"] = f"{req_a}-{req_m}-{req_j}"
-        else:
-            payload["annee_naissance"] = req_a
+        payload["annee_naissance"] = req_a
+    if req_m:
+        try:
+            payload["mois_naissance"] = int(req_m)
+        except ValueError:
+            pass
+    if req_j:
+        try:
+            payload["jour_naissance"] = int(req_j)
+        except ValueError:
+            pass
 
     tous_les_resultats = []
     
-    # Utilisation d'une seule clé pour le test de performance réseau
+    # Utilisation d'une seule clé pour le test de performance
     cles_a_utiliser = obtenir_cles_disponibles(nombre=1)
     
     try:
