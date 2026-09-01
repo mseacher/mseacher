@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mseacher — Base de données</title>
+    <meta name="theme-color" content="#0B0D14" />
+
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                        space: ['Space Grotesk', 'sans-serif'],
+                    },
+                    colors: {
+                        darkbg: '#0B0D14',
+                        cardbg: '#121520',
+                        sidebarbg: '#0F111A',
+                        bordercol: '#1E2330'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0B0D14; }
+        ::-webkit-scrollbar-thumb { background: #1E2330; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3b82f6; }
+    </style>
+</head>
+<body class="bg-darkbg text-zinc-100 min-h-screen flex flex-col font-sans selection:bg-blue-600 selection:text-white">
+
+    <!-- Modal des Conditions d'Utilisation (CGU) -->
+    <div id="terms-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md hidden">
+        <div class="bg-cardbg border border-bordercol text-zinc-200 w-full max-w-2xl max-h-[85vh] p-6 rounded-xl shadow-2xl mx-4 flex flex-col">
+            <h2 class="text-lg sm:text-xl font-bold text-white mb-3 font-space flex items-center gap-2">
+                <i class="fa-solid fa-shield-halved text-blue-500"></i>
+                <span>Conditions Générales d'Utilisation & Avertissement</span>
+            </h2>
+            
+            <div id="terms-content" class="space-y-4 text-xs sm:text-sm text-zinc-400 overflow-y-auto pr-3 mb-6 font-mono leading-relaxed bg-darkbg p-4 rounded-lg border border-bordercol">
+                <p><strong class="text-zinc-200">Article 1 : Objet</strong><br>Les présentes Conditions Générales d'Utilisation (CGU) régissent l'accès et l'utilisation du site et moteur de recherche <strong>mseacher</strong> (ci-après « le Service »). Tout utilisateur accédant au Service reconnaît avoir pris connaissance des présentes conditions et les accepter sans réserve.</p>
+                
+                <p><strong class="text-zinc-200">Article 2 : Acceptation et Capacité</strong><br>L'utilisation de <strong>mseacher</strong> est conditionnée par l'acceptation préalable et sans réserve des présentes règles. En cliquant sur « Accepter », l'utilisateur certifie qu'il dispose de la capacité juridique pour consentir à ces termes et qu'il s'engage à les respecter en tout temps.</p>
+                
+                <p><strong class="text-zinc-200">Article 3 : Description du Service</strong><br><strong>mseacher</strong> est un outil technique d'interrogation et d'agrégation de données s'appuyant sur des interfaces de programmation (API) tierces. Le Service permet d'effectuer des recherches multicritères à partir de sources externes. L'éditeur ne garantit pas la disponibilité permanente du Service et se réserve le droit de le suspendre, de le modifier ou de l'interrompre à tout moment sans préavis.</p>
+                
+                <p><strong class="text-zinc-200">Article 4 : Nature des Données et Absence de Garantie</strong><br>Les données restituées par le moteur de recherche proviennent de bases de données et de sources externes sur lesquelles l'éditeur de <strong>mseacher</strong> n'exerce aucun contrôle direct quant à leur exactitude, leur mise à jour, leur licéité ou leur intégrité. En conséquence :<br>• L'éditeur ne fournit aucune garantie, expresse ou implicite, concernant la véracité ou la fiabilité des résultats affichés.<br>• Les informations obtenues ne sauraient en aucun cas constituer des documents officiels, des certificats ou des preuves juridiques.<br>• L'utilisateur est seul responsable de l'interprétation, de l'usage et de la diffusion qu'il fait des résultats de recherche obtenus.</p>
+                
+                <p><strong class="text-zinc-200">Article 5 : Engagements et Comportements Interdits</strong><br>L'utilisateur s'engage à utiliser le Service dans un cadre strictement légal et conforme à l'ordre public. Il est formellement interdit de :<br>• Utiliser <strong>mseacher</strong> ou les données extraites à des fins de harcèlement, de chantage, d'usurpation d'identité, de traque (stalking), de diffamation ou de toute autre activité illégale.<br>• Contourner, surcharger, saturer (attaque par déni de service / DDoS) ou tenter de pirater l'infrastructure technique, les scripts de rotation des clés ou les serveurs du Service.<br>• Utiliser des robots de scraping automatisés non autorisés pour aspirer massivement le contenu du site.</p>
+                
+                <p><strong class="text-zinc-200">Article 6 : Limitation de Responsabilité</strong><br>L'éditeur, les développeurs et les administrateurs de <strong>mseacher</strong> ne pourront en aucun cas être tenus pour responsables des dommages directs ou indirects (pertes de données, préjudices financiers, réclamations de tiers) résultant de l'utilisation du Service, de l'impossibilité d'y accéder, ou d'erreurs contenues dans les résultats renvoyés par les API tierces. L'utilisation du site se fait entièrement aux risques et périls de l'utilisateur.</p>
+                
+                <p><strong class="text-zinc-200">Article 7 : Données Personnelles et Vie Privée</strong><br>Le Service n'a pas vocation à stocker durablement les requêtes des utilisateurs sur des serveurs distants, mais utilise un stockage local (<code>localStorage</code>) sur le navigateur de l'appareil de l'utilisateur pour enregistrer son consentement aux présentes conditions. L'utilisateur est seul responsable du respect de la législation en vigueur relative à la protection des données personnelles s'il manipule des données nominatives.</p>
+                
+                <p><strong class="text-zinc-200">Article 8 : Propriété Intellectuelle</strong><br>L'ensemble des éléments constituant l'interface, le code source, la charte graphique et le nom du site <strong>mseacher</strong> sont protégés par les lois relatives à la propriété intellectuelle. Toute reproduction, modification, distribution ou exploitation non autorisée de tout ou partie de ces éléments est strictement interdite.</p>
+                
+                <p><strong class="text-zinc-200">Article 9 : Modification des Conditions</strong><br>L'éditeur se réserve le droit de modifier unilatéralement et à tout moment les termes des présentes CGU. Il est conseillé à l'utilisateur de consulter régulièrement cette page pour se tenir informé des éventuelles mises à jour.</p>
+                
+                <p><strong class="text-zinc-200">Article 10 : Clause de Garantie et d'Indemnisation de l'Éditeur</strong><br>L'utilisateur s'engage expressément à garantir, indemniser et dégager de toute responsabilité l'éditeur, les administrateurs, les créateurs et les collaborateurs de <strong>mseacher</strong> contre l'ensemble des réclamations, actions, poursuites, demandes, amendes, pertes, responsabilités, coûts ou dépenses découlant :<br>• D'une violation par l'utilisateur des présentes Conditions Générales d'Utilisation.<br>• De l'utilisation, de la mauvaise utilisation, de l'exploitation ou de la diffusion illégale des données obtenues via le Service.<br>• D'une infraction à la législation en vigueur commise par l'utilisateur à l'aide des informations extraites.</p>
+                
+                <p><strong class="text-zinc-200">Article 11 : Absence de Statut de Fournisseur de Données</strong><br>L'éditeur de <strong>mseacher</strong> agit en qualité de simple prestataire technique mettant à disposition une interface logicielle d'affichage. L'éditeur ne stocke pas, ne contrôle pas, ne modifie pas et ne valide pas les flux de données provenant des API tierces. Toute réclamation relative aux données elles-mêmes doit être adressée directement aux sources ou API tierces d'origine.</p>
+                
+                <p><strong class="text-zinc-200">Article 12 : Suspension, Blocage et Résiliation unilatérale</strong><br>L'éditeur se réserve le droit absolu, discrétionnaire et sans préavis de suspendre, restreindre ou bloquer l'accès au Service à tout utilisateur, de manière temporaire ou définitive, en cas de suspicion d'utilisation abusive, d'atteinte à la sécurité du système ou de non-respect des présentes conditions.</p>
+                
+                <p><strong class="text-zinc-200">Article 13 : Force Majeure et Disponibilité du Réseau</strong><br>La responsabilité de l'éditeur ne pourra être engagée en cas de force majeure ou d'événements indépendants de sa volonté, tels qu'une interruption, une panne, un blocage, une modification ou une révocation des API tierces utilisées (notamment les services de BrixHub), une coupure de réseau Internet, ou une défaillance des hébergeurs et serveurs tiers.</p>
+                
+                <p><strong class="text-zinc-200">Article 14 : Loi Applicable et Juridiction Compétente</strong><br>Les présentes Conditions Générales d'Utilisation sont régies par le droit français. En cas de litige relatif à l'interprétation, la validité ou l'exécution des présentes conditions, et à défaut de résolution amiable, compétence exclusive est attribuée aux tribunaux compétents.</p>
+            </div>
+
+            <div class="flex gap-3 shrink-0">
+                <button id="btn-refuse" class="flex-1 px-4 py-2.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-600/50 rounded-lg font-medium transition text-xs font-mono">
+                    Refuser
+                </button>
+                <button id="btn-accept" class="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium transition text-xs font-mono shadow-lg shadow-blue-600/20">
+                    Accepter
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Écran de blocage si refus -->
+    <div id="blocked-screen" class="fixed inset-0 z-50 bg-darkbg text-white flex flex-col items-center justify-center p-6 hidden">
+        <div class="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-500 mb-4 text-xl">
+            <i class="fa-solid fa-ban"></i>
+        </div>
+        <h1 class="text-xl sm:text-2xl font-bold text-red-400 mb-2 font-space">Accès refusé</h1>
+        <p class="text-zinc-400 text-center max-w-md mb-6 text-xs sm:text-sm font-mono">Vous avez refusé les conditions d'utilisation. L'accès à mseacher vous est par conséquent interdit.</p>
+        <button onclick="revoirConditions()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-xs font-mono border border-bordercol transition flex items-center gap-2">
+            <i class="fa-solid fa-rotate-right"></i>
+            <span>Revoir les conditions</span>
+        </button>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-cardbg/80 backdrop-blur-md border-b border-bordercol h-16 flex items-center justify-between px-4 sm:px-6 shrink-0 z-20 sticky top-0">
+        <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-lg bg-blue-600/10 border border-blue-500/30 flex items-center justify-center text-blue-500 shadow-lg shadow-blue-500/10">
+                <i class="fa-solid fa-shield-halved text-lg"></i>
+            </div>
+            <div class="flex items-baseline space-x-2">
+                <h1 class="text-lg sm:text-xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500 font-space">mseacher</h1>
+                <span class="text-[10px] sm:text-xs text-zinc-500 font-semibold font-mono bg-sidebarbg px-2 py-0.5 rounded border border-bordercol">v0.7 Bêta</span>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3">
+            <div class="hidden lg:flex items-center justify-center bg-zinc-900/80 border border-bordercol rounded-lg px-4 py-1.5 text-xs text-zinc-400 h-9 shadow-inner font-mono gap-2">
+                <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                <span>En Ligne</span> 
+            </div>
+            <button onclick="toggleMobileSidebar()" class="lg:hidden bg-zinc-800/80 border border-bordercol text-zinc-300 p-2 rounded-lg text-sm hover:bg-zinc-700 transition">
+                <i class="fa-solid fa-sliders"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Layout Principal -->
+    <div class="flex flex-1 relative overflow-hidden">
+        
+        <!-- Sidebar Filtres -->
+        <aside id="app-sidebar" class="fixed inset-y-0 left-0 z-30 w-full sm:w-[380px] bg-sidebarbg border-r border-bordercol flex flex-col h-full transform -translate-x-full lg:translate-x-0 lg:static transition-transform duration-300 ease-in-out">
+            <div class="flex items-center justify-between p-4 border-b border-bordercol lg:hidden bg-cardbg">
+                <h2 class="text-sm font-bold text-zinc-200 font-space">Filtres d'investigation</h2>
+                <button onclick="toggleMobileSidebar()" class="text-zinc-400 hover:text-white text-base px-2 py-1">✕</button>
+            </div>
+
+            <div class="p-4 overflow-y-auto flex-1 space-y-3 font-mono">
+                <h2 class="hidden lg:block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 font-space">Filtres de Recherche</h2>
+
+                <!-- Identité -->
+                <div class="bg-cardbg border border-bordercol rounded-lg p-3 space-y-2 shadow-sm hover:border-blue-500/30 transition-colors">
+                    <button onclick="toggleSection('section-identite')" class="w-full flex justify-between items-center text-xs font-bold text-zinc-200 uppercase">
+                        <span><i class="fa-solid fa-user mr-2 text-blue-500"></i>Identité</span>
+                        <span id="arrow-section-identite" class="text-zinc-500 text-[10px]">▼</span>
+                    </button>
+                    <div id="section-identite" class="space-y-2 pt-2 border-t border-bordercol/50">
+                        <div class="flex items-center justify-between gap-2"><span class="text-[11px] text-zinc-400 w-24">Nom</span><input type="text" id="nom_famille" placeholder="Dupont" class="flex-1 bg-darkbg border border-bordercol rounded px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors"></div>
+                        <div class="flex items-center justify-between gap-2"><span class="text-[11px] text-zinc-400 w-24">Prénom</span><input type="text" id="prenom" placeholder="Jean" class="flex-1 bg-darkbg border border-bordercol rounded px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors"></div>
+                        <div class="flex items-center justify-between gap-2"><span class="text-[11px] text-zinc-400 w-24">Pseudo</span><input type="text" id="nom_affichage" placeholder="jdupont" class="flex-1 bg-darkbg border border-bordercol rounded px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors"></div>
+                    </div>
+                </div>
+
+                <!-- Date de Naissance -->
+                <div class="bg-cardbg border border-bordercol rounded-lg p-3 space-y-2 shadow-sm hover:border-blue-500/30 transition-colors">
+                    <button onclick="toggleSection('section-dob')" class="w-full flex justify-between items-center text-xs font-bold text-zinc-200 uppercase">
+                        <span><i class="fa-solid fa-calendar mr-2 text-blue-500"></i>Naissance</span>
+                        <span id="arrow-section-dob" class="text-zinc-500 text-[10px]">▼</span>
+                    </button>
+                    <div id="section-dob" class="space-y-2 pt-2 border-t border-bordercol/50">
+                        <div class="grid grid-cols-3 gap-2">
+                            <input type="text" id="dob_jour" placeholder="JJ" class="bg-darkbg border border-bordercol rounded px-2 py-1.5 text-xs text-center text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors">
+                            <input type="text" id="dob_mois" placeholder="MM" class="bg-darkbg border border-bordercol rounded px-2 py-1.5 text-xs text-center text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors">
+                            <input type="text" id="dob_annee" placeholder="AAAA" class="bg-darkbg border border-bordercol rounded px-2 py-1.5 text-xs text-center text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact -->
+                <div class="bg-cardbg border border-bordercol rounded-lg p-3 space-y-2 shadow-sm hover:border-blue-500/30 transition-colors">
+                    <button onclick="toggleSection('section-contact')" class="w-full flex justify-between items-center text-xs font-bold text-zinc-200 uppercase">
+                        <span><i class="fa-solid fa-address-book mr-2 text-blue-500"></i>Contact & Réseau</span>
+                        <span id="arrow-section-contact" class="text-zinc-500 text-[10px]">▼</span>
+                    </button>
+                    <div id="section-contact" class="space-y-2 pt-2 border-t border-bordercol/50">
+                        <div class="flex items-center justify-between gap-2"><span class="text-[11px] text-zinc-400 w-24">Email</span><input type="text" id="email" placeholder="mail@domain.com" class="flex-1 bg-darkbg border border-bordercol rounded px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors"></div>
+                        <div class="flex items-center justify-between gap-2"><span class="text-[11px] text-zinc-400 w-24">Téléphone</span><input type="text" id="telephone" placeholder="0612345678" class="flex-1 bg-darkbg border border-bordercol rounded px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors"></div>
+                        <div class="flex items-center justify-between gap-2"><span class="text-[11px] text-zinc-400 w-24">Adresse IP</span><input type="text" id="adresse_ip" placeholder="192.168.1.1" class="flex-1 bg-darkbg border border-bordercol rounded px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors"></div>
+                    </div>
+                </div>
+
+                <!-- Localisation -->
+                <div class="bg-cardbg border border-bordercol rounded-lg p-3 space-y-2 shadow-sm hover:border-blue-500/30 transition-colors">
+                    <button onclick="toggleSection('section-adresse')" class="w-full flex justify-between items-center text-xs font-bold text-zinc-200 uppercase">
+                        <span><i class="fa-solid fa-location-dot mr-2 text-blue-500"></i>Localisation</span>
+                        <span id="arrow-section-adresse" class="text-zinc-500 text-[10px]">▼</span>
+                    </button>
+                    <div id="section-adresse" class="space-y-2 pt-2 border-t border-bordercol/50">
+                        <div class="flex items-center justify-between gap-2"><span class="text-[11px] text-zinc-400 w-24">Ville</span><input type="text" id="ville" placeholder="Paris" class="flex-1 bg-darkbg border border-bordercol rounded px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors"></div>
+                        <div class="flex items-center justify-between gap-2"><span class="text-[11px] text-zinc-400 w-24">Code Postal</span><input type="text" id="code_postal" placeholder="75001" class="flex-1 bg-darkbg border border-bordercol rounded px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors"></div>
+                    </div>
+                </div>
+
+                <!-- Gaming & IDs -->
+                <div class="bg-cardbg border border-bordercol rounded-lg p-3 space-y-2 shadow-sm hover:border-blue-500/30 transition-colors">
+                    <button onclick="toggleSection('section-gaming')" class="w-full flex justify-between items-center text-xs font-bold text-zinc-200 uppercase">
+                        <span><i class="fa-solid fa-gamepad mr-2 text-blue-500"></i>Gaming / FiveM</span>
+                        <span id="arrow-section-gaming" class="text-zinc-500 text-[10px]">▼</span>
+                    </button>
+                    <div id="section-gaming" class="space-y-2 pt-2 border-t border-bordercol/50">
+                        <div class="flex items-center justify-between gap-2"><span class="text-[11px] text-zinc-400 w-24">Discord ID</span><input type="text" id="discord_id" placeholder="123456..." class="flex-1 bg-darkbg border border-bordercol rounded px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors"></div>
+                        <div class="flex items-center justify-between gap-2"><span class="text-[11px] text-zinc-400 w-24">FiveM License</span><input type="text" id="fivem_license" placeholder="hex_..." class="flex-1 bg-darkbg border border-bordercol rounded px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions Bas Sidebar -->
+            <div class="p-4 bg-cardbg border-t border-bordercol space-y-2 shrink-0">
+                <button onclick="lancerRecherche()" id="search-btn" class="w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold py-3 rounded-lg transition text-xs shadow-lg shadow-blue-600/20 tracking-wider font-mono flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span>RECHERCHER</span>
+                </button>
+                <button onclick="effacerFiltres()" class="w-full bg-transparent hover:bg-zinc-800 text-zinc-400 font-medium py-2 rounded-lg transition text-xs border border-bordercol font-mono flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>Réinitialiser</span>
+                </button>
+                <!-- Bouton Tout Relire (CGU) -->
+                <button onclick="revoirConditions()" class="w-full bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 font-medium py-2 rounded-lg transition text-[11px] border border-bordercol font-mono flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-file-contract text-blue-500"></i>
+                    <span>Conditions d'utilisation</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto p-4 sm:p-6 bg-darkbg flex flex-col w-full">
+            <div class="bg-cardbg border border-bordercol rounded-xl px-4 sm:px-6 py-4 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-sm">
+                <div class="flex items-center space-x-3">
+                    <h2 class="text-base sm:text-lg font-bold text-zinc-100 tracking-tight font-space">Résultats</h2>
+                    <div id="status-badge" class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs px-3 py-1 rounded-full font-semibold flex items-center space-x-1.5 font-mono">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                        <span>Prêt</span>
+                    </div>
+                </div>
+                <button onclick="ouvrirJsonBrut()" class="bg-zinc-800/80 hover:bg-zinc-700 text-zinc-200 border border-bordercol text-xs px-3.5 py-2 rounded-lg font-semibold transition flex items-center space-x-2 font-mono">
+                    <i class="fa-solid fa-code text-blue-400"></i>
+                    <span>JSON Brut</span>
+                </button>
+            </div>
+
+            <div id="results-container" class="space-y-4 flex-1">
+                <div class="flex flex-col items-center justify-center h-64 sm:h-72 text-zinc-500 border border-dashed border-bordercol rounded-xl bg-cardbg/30 p-6 text-center">
+                    <div class="w-12 h-12 rounded-full bg-zinc-900 border border-bordercol flex items-center justify-center text-zinc-400 mb-3 text-xl">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </div>
+                    <p class="text-sm font-semibold text-zinc-400 font-space">Aucune recherche effectuée</p>
+                    <p class="text-xs text-zinc-500 mt-1 font-mono">Remplissez un ou plusieurs filtres pour explorer mseacher.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal JSON Brut -->
+    <div id="json-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4 sm:p-6">
+        <div class="bg-cardbg border border-bordercol rounded-xl w-full max-w-4xl h-[80vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="flex justify-between items-center px-4 sm:px-6 py-4 border-b border-bordercol">
+                <h3 class="text-xs sm:text-sm font-bold text-zinc-200 font-mono flex items-center gap-2">
+                    <i class="fa-solid fa-database text-blue-500"></i>
+                    <span>Export JSON Brut - mseacher</span>
+                </h3>
+                <div class="flex items-center gap-2">
+                    <button onclick="copierJson()" class="text-zinc-400 hover:text-white text-xs font-mono px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 rounded border border-bordercol transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-copy"></i>
+                        <span id="copy-text">Copier</span>
+                    </button>
+                    <button onclick="fermerJsonBrut()" class="text-zinc-400 hover:text-white text-sm font-bold px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 rounded border border-bordercol transition">✕</button>
+                </div>
+            </div>
+            <div class="p-4 flex-1 overflow-hidden">
+                <pre id="json-content" class="w-full h-full bg-darkbg border border-bordercol rounded-lg p-4 font-mono text-[11px] text-emerald-400 overflow-auto select-all"></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Client & Gestion CGU -->
+    <script>
+        let derniereReponseJson = {};
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const modal = document.getElementById("terms-modal");
+            const blockedScreen = document.getElementById("blocked-screen");
+            const btnAccept = document.getElementById("btn-accept");
+            const btnRefuse = document.getElementById("btn-refuse");
+
+            const userConsent = localStorage.getItem("mseacher_consent");
+
+            if (userConsent === "accepted") {
+                modal.classList.add("hidden");
+                blockedScreen.classList.add("hidden");
+            } else if (userConsent === "refused") {
+                modal.classList.add("hidden");
+                blockedScreen.classList.remove("hidden");
+            } else {
+                modal.classList.remove("hidden");
+                blockedScreen.classList.add("hidden");
+            }
+
+            btnAccept.addEventListener("click", () => {
+                localStorage.setItem("mseacher_consent", "accepted");
+                modal.classList.add("hidden");
+                blockedScreen.classList.add("hidden");
+            });
+
+            btnRefuse.addEventListener("click", () => {
+                localStorage.setItem("mseacher_consent", "refused");
+                modal.classList.add("hidden");
+                blockedScreen.classList.remove("hidden");
+            });
+        });
+
+        function revoirConditions() {
+            const modal = document.getElementById("terms-modal");
+            const blockedScreen = document.getElementById("blocked-screen");
+            blockedScreen.classList.add("hidden");
+            modal.classList.remove("hidden");
+            // Remonter le scroll du texte en haut si besoin
+            const termsContent = document.getElementById("terms-content");
+            if (termsContent) termsContent.scrollTop = 0;
+        }
+
+        function capitalize(str) {
+            if (!str) return '';
+            return String(str).charAt(0).toUpperCase() + String(str).slice(1).toLowerCase();
+        }
+
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('app-sidebar');
+            sidebar.classList.toggle('-translate-x-full');
+        }
+
+        function toggleSection(id) {
+            const el = document.getElementById(id);
+            const arrow = document.getElementById('arrow-' + id);
+            el.classList.toggle('hidden');
+            arrow.innerText = el.classList.contains('hidden') ? '▶' : '▼';
+        }
+
+        function effacerFiltres() {
+            document.querySelectorAll('aside input[type="text"]').forEach(input => input.value = '');
+        }
+
+        async function lancerRecherche() {
+            if (window.innerWidth < 1024) {
+                toggleMobileSidebar();
+            }
+
+            const btn = document.getElementById('search-btn');
+            const statusBadge = document.getElementById('status-badge');
+            const container = document.getElementById('results-container');
+
+            const criteria = {
+                nom_famille: document.getElementById('nom_famille').value.trim(),
+                prenom: document.getElementById('prenom').value.trim(),
+                nom_affichage: document.getElementById('nom_affichage').value.trim(),
+                dob_jour: document.getElementById('dob_jour').value.trim(),
+                dob_mois: document.getElementById('dob_mois').value.trim(),
+                dob_annee: document.getElementById('dob_annee').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                telephone: document.getElementById('telephone').value.trim(),
+                adresse_ip: document.getElementById('adresse_ip').value.trim(),
+                ville: document.getElementById('ville').value.trim(),
+                code_postal: document.getElementById('code_postal').value.trim(),
+                discord_id: document.getElementById('discord_id').value.trim(),
+                fivem_license: document.getElementById('fivem_license').value.trim()
+            };
+
+            Object.keys(criteria).forEach(key => { if (!criteria[key]) delete criteria[key]; });
+            if (Object.keys(criteria).length === 0) { 
+                alert("Veuillez renseigner au moins un filtre."); 
+                return; 
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i><span>RECHERCHE...</span>`;
+            statusBadge.className = "bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs px-3 py-1 rounded-full font-semibold flex items-center space-x-1.5 font-mono";
+            statusBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span><span>En cours</span>`;
+            
+            container.innerHTML = `
+                <div class="flex flex-col items-center justify-center h-64 text-blue-500 border border-bordercol rounded-xl bg-cardbg/30">
+                    <i class="fa-solid fa-bolt text-3xl animate-bounce mb-3"></i>
+                    <p class="text-sm font-semibold text-zinc-300 font-mono">Interrogation des bases mseacher...</p>
+                </div>`;
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ criteria: criteria })
+                });
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.detail || "Erreur serveur.");
+                }
+                const data = await response.json();
+                derniereReponseJson = data;
+                afficherResultats(data.data?.results || data.results || []);
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-64 text-red-500 border border-red-500/20 rounded-xl bg-red-500/5 p-4 text-center">
+                        <i class="fa-solid fa-triangle-exclamation text-3xl mb-3"></i>
+                        <p class="text-xs font-semibold text-red-400 font-mono">${error.message}</p>
+                    </div>`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-magnifying-glass"></i><span>RECHERCHER</span>`;
+                statusBadge.className = "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs px-3 py-1 rounded-full font-semibold flex items-center space-x-1.5 font-mono";
+                statusBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span><span>Prêt</span>`;
+            }
+        }
+
+        function afficherResultats(results) {
+            const container = document.getElementById('results-container');
+            container.innerHTML = "";
+            if (!results || results.length === 0) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-64 text-zinc-400 border border-bordercol rounded-xl bg-cardbg/30 p-4 text-center">
+                        <i class="fa-solid fa-folder-open text-3xl mb-3 text-zinc-600"></i>
+                        <p class="text-sm font-semibold text-zinc-300 font-space">Aucun résultat trouvé.</p>
+                    </div>`;
+                return;
+            }
+            let html = `<p class="text-xs font-bold text-zinc-400 mb-3 px-1 font-mono">✨ ${results.length} document(s) trouvé(s)</p>`;
+            results.forEach(res => {
+                const nomComplet = `${capitalize(res.prenom)} ${String(res.nom_famille || "").toUpperCase()}`.trim() || "Profil Anonyme";
+                const conf = res._confidence || 0;
+                let confColor = conf >= 80 ? "text-emerald-400 border-emerald-500/20 bg-emerald-500/10" : conf >= 50 ? "text-amber-400 border-amber-500/20 bg-amber-500/10" : "text-red-400 border-red-500/20 bg-red-500/10";
+                
+                let fieldsHtml = '';
+                for (const [k, v] of Object.entries(res)) {
+                    if (k.startsWith('_') || !v) continue;
+                    fieldsHtml += `
+                        <div class="flex items-center bg-darkbg p-2.5 rounded border border-bordercol font-mono">
+                            <span class="text-[10px] sm:text-[11px] text-zinc-500 font-bold w-28 sm:w-32 shrink-0 truncate">${k.replace(/_/g, ' ').toUpperCase()} :</span>
+                            <input type="text" readonly value="${v}" class="w-full bg-transparent text-[11px] sm:text-xs text-zinc-200 focus:outline-none truncate select-all">
+                        </div>`;
+                }
+                
+                let sourcesHtml = res._sources?.length ? `
+                    <div class="pt-3 border-t border-bordercol flex flex-wrap items-center gap-1.5">
+                        <span class="text-[10px] font-bold text-zinc-500 font-mono">Sources :</span>
+                        ${res._sources.map(s => `<span class="bg-sidebarbg border border-bordercol px-2 py-0.5 rounded text-[9px] font-bold text-zinc-400 uppercase font-mono">${s}</span>`).join('')}
+                    </div>` : '';
+
+                html += `
+                    <div class="bg-cardbg border border-bordercol rounded-xl p-4 sm:p-5 space-y-4 shadow-md hover:border-blue-500/30 transition-all">
+                        <div class="flex justify-between items-center gap-2">
+                            <h3 class="text-sm sm:text-base font-bold text-zinc-100 truncate font-space flex items-center gap-2">
+                                <i class="fa-regular fa-id-card text-blue-500"></i>
+                                <span>${nomComplet}</span>
+                            </h3>
+                            <span class="text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-md border ${confColor} font-mono shrink-0">${conf}%</span>
+                        </div>
+                        <div class="h-[1px] bg-bordercol w-full"></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">${fieldsHtml}</div>
+                        ${sourcesHtml}
+                    </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function ouvrirJsonBrut() {
+            if (!Object.keys(derniereReponseJson).length) { alert("Aucune donnée disponible."); return; }
+            document.getElementById('json-content').innerText = JSON.stringify(derniereReponseJson, null, 2);
+            document.getElementById('json-modal').classList.replace('hidden', 'flex');
+        }
+
+        function fermerJsonBrut() { document.getElementById('json-modal').classList.replace('flex', 'hidden'); }
+
+        function copierJson() {
+            const content = document.getElementById('json-content').innerText;
+            navigator.clipboard.writeText(content).then(() => {
+                const btnText = document.getElementById('copy-text');
+                btnText.innerText = "Copié !";
+                setTimeout(() => { btnText.innerText = "Copier"; }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
