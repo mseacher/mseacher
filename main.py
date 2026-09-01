@@ -40,92 +40,15 @@ class SearchRequest(BaseModel):
     criteria: dict
 
 def obtenir_cles_disponibles(nombre=1):
-    """Récupère un pool de plusieurs clés différentes pour paralléliser"""
+    """Récupère un pool de clés pour la recherche"""
     with key_lock:
         if not API_KEYS:
             return []
-        # Trie les clés par quota décroissant et en prend plusieurs
         sorted_keys = sorted(API_KEYS, key=lambda k: key_quotas.get(k, 0), reverse=True)
         return sorted_keys[:nombre]
 
-def filtrer_profils(results, criteria):
-    if not isinstance(results, list):
-        print(f"[DEBUG] filtrer_profils: results n'est pas une liste -> {type(results)}")
-        return []
-        
-    profils_propres = []
-    seen_ids = set()
-    
-    req_a = str(criteria.get("dob_annee", "")).strip()
-    req_m = str(criteria.get("dob_mois", "")).strip().zfill(2) if criteria.get("dob_mois") else ""
-    req_j = str(criteria.get("dob_jour", "")).strip().zfill(2) if criteria.get("dob_jour") else ""
-    
-    for res in results:
-        if not isinstance(res, dict):
-            continue
-            
-        # Clé unique pour éviter les doublons stricts
-        unique_key = tuple(sorted(str(v) for k, v in res.items() if k in ["email", "telephone", "adresse", "id"] and v))
-        if unique_key and unique_key in seen_ids:
-            continue
-        if unique_key:
-            seen_ids.add(unique_key)
-
-        # 1. Sécurité
-        try:
-            if any(any(term in str(v).lower() for term in BLOCKED_TERMS) for v in res.values()):
-                continue
-        except Exception:
-            continue
-            
-        # 2. Date
-        if req_a or req_m or req_j:
-            res_date = str(res.get("Naissance") or res.get("date_naissance") or res.get("birth_date") or res.get("dob") or "").strip()
-            if not res_date:
-                continue
-                
-            rejete_date = False
-            if req_a and req_a not in res_date: rejete_date = True
-            if req_m and req_m not in res_date: rejete_date = True
-            if req_j and req_j not in res_date: rejete_date = True
-            if rejete_date:
-                continue
-
-        # 3. Texte
-        rejete = False
-        champs_a_verifier = ["ville", "nom_famille", "prenom", "email", "telephone"]
-        
-        for champ in champs_a_verifier:
-            valeur_recherchee = str(criteria.get(champ, "")).lower().strip()
-            if valeur_recherchee:
-                valeur_profil = str(res.get(champ, "")).lower()
-                if valeur_recherchee not in valeur_profil:
-                    rejete = True
-                    break
-                
-        if rejete:
-            continue
-        
-        champs_remplis = sum(1 for k, v in res.items() if v and not k.startswith("_"))
-        if champs_remplis >= 1:
-            profils_propres.append(res)
-            
-    def score_fiabilite(profil):
-        try:
-            sources_str = " ".join([str(s).lower() for s in profil.get("_sources", [])])
-            score = 0
-            if "caf" in sources_str: score += 50
-            if "ants" in sources_str: score += 50
-            score += sum(1 for k, v in profil.items() if v and not k.startswith("_"))
-            return score
-        except Exception:
-            return 0
-
-    profils_propres.sort(key=score_fiabilite, reverse=True)
-    return profils_propres
-
 def fetch_with_key(payload, key):
-    """Exécute une requête de recherche avec une clé spécifique"""
+    """Exécute une requête de recherche avec une clé spécifique selon la spec BrixHub"""
     headers = {"X-API-Key": key, "Content-Type": "application/json"}
     
     try:
@@ -162,7 +85,7 @@ def read_root():
 
 @app.post("/api/search")
 def run_search(req: SearchRequest):
-    print(f"[DEBUG] Requête reçue avec les critères : {req.criteria}")
+    print(f"[DEBUG] Requête reçue avec les critères bruts : {req.criteria}")
     
     if not req.criteria or not isinstance(req.criteria, dict):
         raise HTTPException(status_code=400, detail="Critères de recherche invalides.")
@@ -176,25 +99,34 @@ def run_search(req: SearchRequest):
                 if term in val_clean:
                     raise HTTPException(status_code=400, detail="Recherche non autorisée.")
 
+    # Construction du payload officiel accepté par l'API BrixHub
+    payload = {"flexible": True} # Activé pour éviter les blocages stricts de correspondance exacte
+    
+    champs_standards = ["nom_famille", "prenom", "ville", "code_postal", "email", "telephone", "siret", "siren", "iban"]
+    for champ in champs_standards:
+        valeur = criteria.get(champ)
+        if valeur:
+            payload[champ] = str(valeur).strip()
+
+    # Gestion propre des critères de date selon la documentation BrixHub
     req_a = str(criteria.get("dob_annee", "")).strip()
     req_m = str(criteria.get("dob_mois", "")).strip().zfill(2) if criteria.get("dob_mois") else ""
     req_j = str(criteria.get("dob_jour", "")).strip().zfill(2) if criteria.get("dob_jour") else ""
 
-    if req_a and not criteria.get("nom_famille") and not criteria.get("prenom"):
+    if req_a:
         if req_m and req_j:
-            criteria["date_naissance"] = f"{req_a}-{req_m}-{req_j}"
+            payload["date_naissance"] = f"{req_a}-{req_m}-{req_j}"
         else:
-            criteria["date_naissance"] = req_a
+            payload["annee_naissance"] = req_a
 
     tous_les_resultats = []
     
-    # On récupère 3 clés différentes pour lancer 3 requêtes en parallèle sur la page 1
-    # (Puisque la pagination > 1 est bloquée, utiliser plusieurs clés permet d'élargir la collecte si l'API renvoie des variations ou de sécuriser le flux)
+    # Utilisation d'une seule clé pour le test de performance réseau
     cles_a_utiliser = obtenir_cles_disponibles(nombre=1)
     
     try:
-        with ThreadPoolExecutor(max_workers=3) as executor:
-            future_to_key = {executor.submit(fetch_with_key, criteria, key): key for key in cles_a_utiliser}
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            future_to_key = {executor.submit(fetch_with_key, payload, key): key for key in cles_a_utiliser}
             for future in as_completed(future_to_key):
                 try:
                     res = future.result()
@@ -206,17 +138,29 @@ def run_search(req: SearchRequest):
         print(f"[DEBUG] Erreur critique ThreadPool: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail="Erreur interne lors du traitement en parallèle.")
 
-    profils_finaux = filtrer_profils(tous_les_resultats, req.criteria)
-    print(f"[DEBUG] Recherche terminée. Résultats uniques totaux : {len(profils_finaux)}")
+    # Nettoyage et filtrage anti-doublons de base
+    seen_ids = set()
+    profils_propres = []
+    for res in tous_les_resultats:
+        if not isinstance(res, dict):
+            continue
+        unique_key = tuple(sorted(str(v) for k, v in res.items() if k in ["email", "telephone", "adresse", "id"] and v))
+        if unique_key and unique_key in seen_ids:
+            continue
+        if unique_key:
+            seen_ids.add(unique_key)
+        profils_propres.append(res)
+
+    print(f"[DEBUG] Recherche terminée. Résultats uniques totaux : {len(profils_propres)}")
     
     return {
         "status": 200,
         "message": "ok",
         "data": {
-            "results": profils_finaux
+            "results": profils_propres
         },
         "meta": {
-            "total": len(profils_finaux)
+            "total": len(profils_propres)
         }
     }
 
