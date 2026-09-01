@@ -380,8 +380,8 @@
                 </div>`;
 
             try {
-                // Point d'accès mis à jour vers ton backend Render (remplace l'ancien localhost)
-                const response = await fetch('https://mseacher.onrender.com/api/search', {
+                // Point d'accès configuré pour l'environnement render
+                const response = await fetch("https://mseacher.onrender.com/api/search", {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ criteria: criteria })
