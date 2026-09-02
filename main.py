@@ -39,7 +39,7 @@ BLOCKED_TERMS = {"msebengi", "alimasi", "mse"}
 class SearchRequest(BaseModel):
     criteria: dict
 
-def obtenir_cles_disponibles(nombre=3):
+def obtenir_cles_disponibles(nombre=1):
     """Récupère un pool de clés pour la recherche"""
     with key_lock:
         if not API_KEYS:
@@ -99,40 +99,37 @@ def run_search(req: SearchRequest):
                 if term in val_clean:
                     raise HTTPException(status_code=400, detail="Recherche non autorisée.")
 
-    # Construction du payload officiel accepté par l'API BrixHub
-    payload = {"flexible": True} # Mode approximatif pour maximiser les correspondances
+    # Construction du payload officiel accepté par l'API BrixHub avec tous les champs du HTML
+    payload = {"flexible": True} 
     
-    champs_standards = ["nom_famille", "prenom", "ville", "code_postal", "email", "telephone", "siret", "siren", "iban"]
+    champs_standards = [
+        "nom_famille", "prenom", "nom_affichage", "ville", 
+        "code_postal", "email", "telephone", "adresse_ip", 
+        "discord_id", "fivem_license", "siret", "siren", "iban"
+    ]
     for champ in champs_standards:
         valeur = criteria.get(champ)
         if valeur:
             payload[champ] = str(valeur).strip()
 
-    # Gestion de la date selon les paramètres exacts de la doc BrixHub
+    # Gestion propre des critères de date selon la documentation BrixHub
     req_a = str(criteria.get("dob_annee", "")).strip()
-    req_m = str(criteria.get("dob_mois", "")).strip()
-    req_j = str(criteria.get("dob_jour", "")).strip()
+    req_m = str(criteria.get("dob_mois", "")).strip().zfill(2) if criteria.get("dob_mois") else ""
+    req_j = str(criteria.get("dob_jour", "")).strip().zfill(2) if criteria.get("dob_jour") else ""
 
     if req_a:
-        payload["annee_naissance"] = req_a
-    if req_m:
-        try:
-            payload["mois_naissance"] = int(req_m)
-        except ValueError:
-            pass
-    if req_j:
-        try:
-            payload["jour_naissance"] = int(req_j)
-        except ValueError:
-            pass
+        if req_m and req_j:
+            payload["date_naissance"] = f"{req_a}-{req_m}-{req_j}"
+        else:
+            payload["annee_naissance"] = req_a
 
     tous_les_resultats = []
     
-    # Utilisation d'une seule clé pour le test de performance
-    cles_a_utiliser = obtenir_cles_disponibles(nombre=3)
+    # Utilisation d'une seule clé pour le test de performance réseau
+    cles_a_utiliser = obtenir_cles_disponibles(nombre=1)
     
     try:
-        with ThreadPoolExecutor(max_workers=3) as executor:
+        with ThreadPoolExecutor(max_workers=1) as executor:
             future_to_key = {executor.submit(fetch_with_key, payload, key): key for key in cles_a_utiliser}
             for future in as_completed(future_to_key):
                 try:
