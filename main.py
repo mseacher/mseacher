@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import requests
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import traceback
 
@@ -33,11 +34,21 @@ API_KEYS = [k.strip() for k in API_KEYS_CONFIG.split(",") if k.strip()]
 key_quotas = {key: 1000 for key in API_KEYS}
 key_lock = threading.Lock()
 
+# Configuration du Webhook Discord et du cooldown par IP (20 minutes = 1200 secondes)
+DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1544835448088825959/cN15TZeAe_QWfyA8INbBgETW6bciqrVVA3w4sm4LA2cL41Ss0LvulhypGG4lyDpf5yRF"
+support_cooldowns = {}
+cooldown_lock = threading.Lock()
+COOLDOWN_TIME = 20 * 60
+
 BASE_URL = "https://api.brixhub.to/api/v1"
 BLOCKED_TERMS = {"msebengi", "alimasi", "mse"}
 
 class SearchRequest(BaseModel):
     criteria: dict
+
+class SupportRequest(BaseModel):
+    type: str
+    message: str
 
 def obtenir_cles_disponibles(nombre=1):
     """Récupère un pool de clés pour la recherche"""
@@ -83,6 +94,45 @@ def fetch_with_key(payload, key):
 def read_root():
     return {"status": "online", "message": "Bienvenue sur l'API Mseacher ! Le backend fonctionne."}
 
+@app.post("/api/support")
+def receive_support(req: SupportRequest, request: Request):
+    """Reçoit les messages de support, applique un cooldown de 20 min par IP et transmet à Discord"""
+    client_ip = request.client.host if request.client else "unknown"
+    current_time = time.time()
+    
+    with cooldown_lock:
+        last_time = support_cooldowns.get(client_ip, 0)
+        elapsed = current_time - last_time
+        if elapsed < COOLDOWN_TIME:
+            remaining_minutes = int((COOLDOWN_TIME - elapsed) / 60) + 1
+            raise HTTPException(
+                status_code=429, 
+                detail=f"Veuillez patienter encore {remaining_minutes} minute(s) avant d'envoyer un nouveau message."
+            )
+        support_cooldowns[client_ip] = current_time
+
+    if not req.message or not req.type:
+        raise HTTPException(status_code=400, detail="Données de support invalides.")
+
+    # Formatage et envoi vers le webhook Discord
+    discord_payload = {
+        "content": f"🚨 **Nouveau message de support / signalement**\n- **IP:** `{client_ip}`\n- **Type:** `{req.type}`\n- **Message:** {req.message}"
+    }
+    
+    try:
+        discord_response = requests.post(DISCORD_WEBHOOK_URL, json=discord_payload, timeout=5)
+        if discord_response.status_code not in [200, 204]:
+            print(f"[DEBUG] Erreur envoi webhook Discord: {discord_response.status_code}")
+            raise HTTPException(status_code=500, detail="Erreur lors de l'envoi du message sur Discord.")
+    except Exception as e:
+        print(f"[DEBUG] Exception webhook Discord: {e}")
+        raise HTTPException(status_code=500, detail="Impossible de joindre le service de messagerie.")
+        
+    return {
+        "status": 200,
+        "message": "Message de support bien reçu et transmis."
+    }
+
 @app.post("/api/search")
 def run_search(req: SearchRequest):
     print(f"[DEBUG] Requête reçue avec les critères bruts : {req.criteria}")
@@ -99,14 +149,10 @@ def run_search(req: SearchRequest):
                 if term in val_clean:
                     raise HTTPException(status_code=400, detail="Recherche non autorisée.")
 
-    # Construction du payload officiel accepté par l'API BrixHub avec tous les champs du HTML
-    payload = {"flexible": True} 
+    # Construction du payload officiel accepté par l'API BrixHub
+    payload = {"flexible": True} # Activé pour éviter les blocages stricts de correspondance exacte
     
-    champs_standards = [
-        "nom_famille", "prenom", "nom_affichage", "ville", 
-        "code_postal", "email", "telephone", "adresse_ip", 
-        "discord_id", "fivem_license", "siret", "siren", "iban"
-    ]
+    champs_standards = ["nom_famille", "prenom", "ville", "code_postal", "email", "telephone", "siret", "siren", "iban"]
     for champ in champs_standards:
         valeur = criteria.get(champ)
         if valeur:
