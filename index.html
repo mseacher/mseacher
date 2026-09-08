@@ -48,6 +48,13 @@
         ::-webkit-scrollbar-thumb:hover { background: #3b82f6; }
         .privacy-blur { filter: blur(6px); transition: filter 0.2s ease; cursor: pointer; }
         .privacy-blur:hover { filter: blur(3px); }
+
+        /* Correction indispensable : garantit que tous les boutons et inputs restent cliquables malgré les scripts publicitaires */
+        input, button, select, textarea, a, label {
+            position: relative;
+            z-index: 50;
+            pointer-events: auto !important;
+        }
     </style>
 </head>
 <body class="bg-darkbg text-zinc-100 min-h-screen flex flex-col font-sans selection:bg-blue-600 selection:text-white">
@@ -124,7 +131,7 @@
                     <i class="fa-solid fa-rocket"></i>
                 </div>
                 <div>
-                    <h2 class="text-base font-bold text-white font-space">Mise à jour v0.8 Déployée !</h2>
+                    <h2 class="text-base font-bold text-white font-space">Mise à jour v0.9 Déployée !</h2>
                     <p class="text-xs text-zinc-400 font-mono">Découvrez les nouvelles fonctionnalités intégrées.</p>
                 </div>
             </div>
@@ -143,7 +150,7 @@
                 </div>
                 <div class="flex items-start gap-2">
                     <i class="fa-solid fa-mobile-screen text-blue-400 mt-0.5"></i>
-                    <span><strong>Support PWA :</strong> Installez directement l'application sur votre écran d'accueil mobile.</span>
+                    <span><strong>Publicité ! :</strong> système publicitaires maintenant disponible pour utiliser le site gratuitement</span>
                 </div>
             </div>
             <button onclick="fermerChangelog()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium transition text-xs font-mono shadow-lg shadow-blue-600/20">
@@ -173,7 +180,7 @@
             </div>
             <div class="flex items-baseline space-x-2">
                 <h1 class="text-lg sm:text-xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500 font-space">mseacher</h1>
-                <span class="text-[10px] sm:text-xs text-zinc-500 font-semibold font-mono bg-sidebarbg px-2 py-0.5 rounded border border-bordercol">v0.8 PRO</span>
+                <span class="text-[10px] sm:text-xs text-zinc-500 font-semibold font-mono bg-sidebarbg px-2 py-0.5 rounded border border-bordercol">v0.9 PRO</span>
             </div>
         </div>
         <div class="flex items-center space-x-3">
@@ -260,7 +267,7 @@
                     </button>
                     <div id="section-adresse" class="space-y-2 pt-2 border-t border-bordercol/50">
                         <div class="flex items-center justify-between gap-2"><span class="text-[11px] text-zinc-400 w-24">Ville</span><input type="text" id="ville" placeholder="Paris" class="search-input flex-1 bg-darkbg border border-bordercol rounded px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors"></div>
-                        <div class="flex items-center justify-between gap-2"><span class="text-[11px] text-zinc-400 w-24">Code Postal</span><input type="text" id="code_postal" placeholder="75001" class="search-input flex-1 bg-darkbg border border-bordercol rounded px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors"></div>
+                        <div class="flex items-center justify-between gap-2"><span class="text-[11px] text-zinc-400 w-24">Code Postal</span><input type="text" id="code_postal" placeholder="75001 / 75" class="search-input flex-1 bg-darkbg border border-bordercol rounded px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors"></div>
                     </div>
                 </div>
 
@@ -368,7 +375,7 @@
 
             const userConsent = localStorage.getItem("mseacher_consent");
             const lastVersionSeen = localStorage.getItem("mseacher_version");
-            const currentVersion = "v0.8";
+            const currentVersion = "v0.9";
 
             if (userConsent === "accepted") {
                 modal.classList.add("hidden");
@@ -421,7 +428,7 @@
         });
 
         function fermerChangelog() {
-            localStorage.setItem("mseacher_version", "v0.8");
+            localStorage.setItem("mseacher_version", "v0.9");
             document.getElementById("changelog-modal").classList.add("hidden");
         }
 
@@ -453,27 +460,29 @@
             submitBtn.disabled = true;
             submitBtn.innerText = "Envoi...";
 
+            const webhookUrl = "https://discord.com/api/webhooks/1544835448088825959/cN15TZeAe_QWfyA8INbBgETW6bciqrVVA3w4sm4LA2cL41Ss0LvulhypGG4lyDpf5yRF";
+
             const payload = {
-                type: type,
-                message: message
+                content: `🚨 **Nouveau message de support (Direct)**\n- **Type:** \`${type}\`\n- **Message:** ${message}`
             };
 
             try {
-                const res = await fetch("/api/support", {
+                const res = await fetch(webhookUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
 
-                if (res.ok) {
+                if (res.ok || res.status === 204) {
                     alert("Votre message a bien été envoyé via le support ! Merci.");
                     document.getElementById("support-message").value = "";
                     fermerSupport();
                 } else {
-                    throw new Error("Erreur lors de l'envoi.");
+                    throw new Error("Erreur lors de l'envoi vers Discord.");
                 }
             } catch (err) {
-                alert("Une erreur est survenue lors de l'envoi du message.");
+                alert("Une erreur est survenue lors de l'envoi du message. Vérifiez le webhook.");
+                console.error(err);
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerText = "Envoyer";
@@ -675,5 +684,7 @@
             });
         }
     </script>
-</body>
+
+    <!-- Script Publicitaire Adsterra (Popunder / Anti-Adblock) -->
+     <script src="https://thinkscomparewindow.com/96/cc/c1/96ccc128e5368724ae8ead5a8a6fd8c6.js"></script></body>
 </html>
