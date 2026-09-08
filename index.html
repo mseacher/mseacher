@@ -50,10 +50,18 @@
         .privacy-blur:hover { filter: blur(3px); }
 
         /* Correction indispensable : garantit que tous les boutons et inputs restent cliquables malgré les scripts publicitaires */
+        /* z-index volontairement bas (5) : ça suffit à passer devant les overlays pub (z-index:auto),
+           sans pour autant dépasser la hiérarchie de l'app (sidebar mobile = 30, modales = 50) */
         input, button, select, textarea, a, label {
             position: relative;
-            z-index: 50;
+            z-index: 5;
             pointer-events: auto !important;
+        }
+
+        /* Bouton Support flottant : doit rester au-dessus du contenu et de la sidebar mobile,
+           mais sous les modales (z-50) */
+        #support-fab {
+            z-index: 40 !important;
         }
     </style>
 </head>
@@ -267,7 +275,7 @@
                     </button>
                     <div id="section-adresse" class="space-y-2 pt-2 border-t border-bordercol/50">
                         <div class="flex items-center justify-between gap-2"><span class="text-[11px] text-zinc-400 w-24">Ville</span><input type="text" id="ville" placeholder="Paris" class="search-input flex-1 bg-darkbg border border-bordercol rounded px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors"></div>
-                        <div class="flex items-center justify-between gap-2"><span class="text-[11px] text-zinc-400 w-24">Code Postal</span><input type="text" id="code_postal" placeholder="75001 / 75" class="search-input flex-1 bg-darkbg border border-bordercol rounded px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors"></div>
+                        <div class="flex items-center justify-between gap-2"><span class="text-[11px] text-zinc-400 w-24">Code Postal</span><input type="text" id="code_postal" placeholder="75001" class="search-input flex-1 bg-darkbg border border-bordercol rounded px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors"></div>
                     </div>
                 </div>
 
@@ -294,16 +302,10 @@
                     <i class="fa-solid fa-rotate-right"></i>
                     <span>Réinitialiser</span>
                 </button>
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="ouvrirSupport()" class="w-full bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 font-medium py-2 rounded-lg transition text-[11px] border border-bordercol font-mono flex items-center justify-center gap-1.5">
-                        <i class="fa-solid fa-headset text-blue-500"></i>
-                        <span>Support</span>
-                    </button>
-                    <button onclick="revoirConditions()" class="w-full bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 font-medium py-2 rounded-lg transition text-[11px] border border-bordercol font-mono flex items-center justify-center gap-1.5">
-                        <i class="fa-solid fa-file-contract text-blue-500"></i>
-                        <span>CGU</span>
-                    </button>
-                </div>
+                <button onclick="revoirConditions()" class="w-full bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 font-medium py-2 rounded-lg transition text-[11px] border border-bordercol font-mono flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-file-contract text-blue-500"></i>
+                    <span>CGU</span>
+                </button>
             </div>
         </aside>
 
@@ -684,6 +686,12 @@
             });
         }
     </script>
+
+    <!-- Bouton Support flottant (rond, bas droite) -->
+    <button onclick="ouvrirSupport()" id="support-fab" title="Support & Suggestions"
+        class="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white shadow-lg shadow-blue-600/30 flex items-center justify-center transition-transform hover:scale-105">
+        <i class="fa-solid fa-headset text-base sm:text-lg"></i>
+    </button>
 
     <!-- Script Publicitaire Adsterra (Popunder / Anti-Adblock) -->
      <script src="https://thinkscomparewindow.com/96/cc/c1/96ccc128e5368724ae8ead5a8a6fd8c6.js"></script></body>
