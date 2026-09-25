@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DJGMGW8ZLK"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-DJGMGW8ZLK');
+</script>
+
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Maintenance en cours — mseacher</title>
@@ -8,167 +17,138 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
 <style>
-    :root {
-        --bg: #0B0D14;
-        --card: #121520;
-        --border: #1E2330;
-        --blue: #3b82f6;
-        --text: #E4E7EE;
-        --muted: #6B7280;
-    }
-    * { box-sizing: border-box; }
-    html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; }
-    body {
-        display: flex; align-items: center; justify-content: center;
-        padding: 24px; position: relative; overflow: hidden;
-    }
-    body::before {
-        content: ""; position: absolute; inset: 0;
-        background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
-        background-size: 42px 42px; opacity: 0.25;
-        mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
-        pointer-events: none;
-    }
+:root{--bg:#0B0D14;--card:#121520;--border:#1E2330;--blue:#3b82f6;--text:#E4E7EE;--muted:#6B7280}
+*{box-sizing:border-box}
+html{height:100%}
+body{
+    margin:0;
+    min-height:100vh;
+    min-height:100dvh;
+    background:var(--bg);
+    color:var(--text);
+    font-family:Inter,sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    overflow:hidden;
+    padding:
+        calc(env(safe-area-inset-top,0px) + 20px)
+        calc(env(safe-area-inset-right,0px) + 20px)
+        calc(env(safe-area-inset-bottom,0px) + 20px)
+        calc(env(safe-area-inset-left,0px) + 20px);
+}
+body::before{content:"";position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:42px 42px;opacity:.25;mask-image:radial-gradient(ellipse at center,#000 0%,transparent 70%);pointer-events:none}
+body::after{content:"";position:absolute;top:-20%;left:50%;translate:-50% 0;width:min(700px,140vw);aspect-ratio:1;background:radial-gradient(circle,rgba(59,130,246,.14),transparent 65%);pointer-events:none}
 
-    .panel {
-        position: relative;
-        width: 100%; max-width: 460px;
-        background: var(--card); border: 1px solid var(--border);
-        border-radius: 16px; padding: 40px 32px; text-align: center;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-    }
+.panel{
+    position:relative;
+    width:100%;
+    max-width:440px;
+    max-height:100%;
+    overflow-y:auto;
+    background:linear-gradient(180deg,rgba(255,255,255,.02),transparent 40%),var(--card);
+    border:1px solid var(--border);
+    border-radius:clamp(14px,4vw,18px);
+    padding:clamp(24px,5vh,40px) clamp(20px,5vw,32px);
+    text-align:center;
+    box-shadow:0 25px 70px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.04);
+}
+.panel::-webkit-scrollbar{width:5px}
+.panel::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 
-    /* Icône qui respire — mouvement unique, discret */
-    .icon-wrap {
-        width: 76px; height: 76px; border-radius: 20px;
-        background: radial-gradient(circle at 35% 30%, #1c2436, var(--card));
-        border: 1px solid var(--border);
-        display: flex; align-items: center; justify-content: center;
-        color: var(--blue); font-size: 26px;
-        margin: 0 auto 22px;
-        animation: breathe 2.8s ease-in-out infinite;
-    }
-    @keyframes breathe {
-        0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59,130,246,0.3); }
-        50% { transform: scale(1.08); box-shadow: 0 0 0 14px rgba(59,130,246,0); }
-    }
+.icon-wrap{
+    width:clamp(56px,12vh,76px);
+    height:clamp(56px,12vh,76px);
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,#1c2436,var(--card));
+    border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--blue);
+    font-size:clamp(20px,5vh,26px);
+    margin:0 auto clamp(14px,3vh,22px);
+    animation:breathe 2.8s ease-in-out infinite;
+}
+@keyframes breathe{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(59,130,246,.3)}50%{transform:scale(1.08);box-shadow:0 0 0 14px rgba(59,130,246,0)}}
 
-    .status-pill {
-        display: inline-flex; align-items: center; gap: 8px;
-        background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.25);
-        color: var(--blue); font-family: 'JetBrains Mono', monospace;
-        font-size: 0.7rem; font-weight: 600; padding: 6px 14px;
-        border-radius: 999px; margin-bottom: 20px;
-    }
-    .status-dot {
-        width: 6px; height: 6px; border-radius: 50%; background: var(--blue);
-        animation: pulse 1.6s ease-in-out infinite;
-    }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+.status-pill{display:inline-flex;align-items:center;gap:8px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);color:var(--blue);font-family:'JetBrains Mono',monospace;font-size:.68rem;font-weight:600;padding:6px 14px;border-radius:999px;margin-bottom:clamp(14px,3vh,20px)}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--blue);animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
-    h1 {
-        font-family: 'Space Grotesk', sans-serif;
-        font-size: 1.5rem; font-weight: 600; margin: 0 0 12px; letter-spacing: -0.01em;
-    }
+h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(1.2rem,4vw,1.5rem);font-weight:600;margin:0 0 10px;letter-spacing:-.01em}
+p.lead{color:#A9AFBC;font-size:clamp(.82rem,2.2vw,.9rem);line-height:1.6;margin:0 0 clamp(16px,3.5vh,24px)}
 
-    p.lead {
-        color: #A9AFBC; font-size: 0.9rem; line-height: 1.6; margin: 0 0 24px;
-    }
+.timer-box{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:clamp(12px,2.5vh,18px);margin-bottom:clamp(14px,3vh,20px)}
+.timer-value{font-family:'JetBrains Mono',monospace;font-size:clamp(1.5rem,5vw,2rem);font-weight:700;color:var(--blue);letter-spacing:.03em;font-variant-numeric:tabular-nums;margin-bottom:6px}
+.timer-label{font-family:'JetBrains Mono',monospace;font-size:.63rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
 
-    .timer-box {
-        background: var(--bg); border: 1px solid var(--border);
-        border-radius: 12px; padding: 18px; margin-bottom: 20px;
-    }
-    .timer-value {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 2rem; font-weight: 700; color: var(--blue);
-        letter-spacing: 0.03em; font-variant-numeric: tabular-nums;
-        margin-bottom: 6px;
-    }
-    .timer-label {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.65rem; color: var(--muted);
-        text-transform: uppercase; letter-spacing: 0.08em;
-    }
+.note{text-align:left;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:clamp(11px,2vh,14px) clamp(13px,3vw,16px);font-size:.76rem;color:#8B93A3;line-height:1.6}
+.note strong{color:#C6CBD6}
 
-    .note {
-        text-align: left; background: var(--bg); border: 1px solid var(--border);
-        border-radius: 10px; padding: 14px 16px;
-        font-size: 0.78rem; color: #8B93A3; line-height: 1.6;
-    }
-    .note strong { color: #C6CBD6; }
+.apology{margin-top:clamp(14px,3vh,20px);font-size:.76rem;color:var(--muted);line-height:1.6}
+.divider{height:1px;background:var(--border);margin:clamp(16px,3.5vh,24px) 0}
+.brand{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:#3A4052;letter-spacing:.04em}
 
-    .apology {
-        margin-top: 20px; font-size: 0.78rem; color: var(--muted); line-height: 1.6;
-    }
-
-    .divider { height: 1px; background: var(--border); margin: 24px 0; }
-
-    .brand {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.7rem; color: #3A4052; letter-spacing: 0.04em;
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-        .icon-wrap, .status-dot { animation: none; }
-    }
+@media (max-height:640px){
+    .lead{margin-bottom:12px}
+    .note{display:none}
+}
+@media (prefers-reduced-motion:reduce){.icon-wrap,.status-dot{animation:none}}
 </style>
 </head>
 <body>
 
-    <div class="panel">
-        <div class="icon-wrap"><i class="fa-solid fa-server"></i></div>
+<div class="panel">
+    <div class="icon-wrap"><i class="fa-solid fa-server"></i></div>
 
-        <div class="status-pill">
-            <span class="status-dot"></span>
-            <span>MAINTENANCE EN COURS</span>
-        </div>
-
-        <h1>On répare le moteur</h1>
-        <p class="lead">
-            Une panne technique nous a forcés à mettre mseacher en pause le temps de la diagnostiquer et de la corriger. Vos recherches et vos données ne sont pas affectées, l'accès est simplement suspendu quelques instants.
-        </p>
-
-        <div class="timer-box">
-            <div class="timer-value" id="timer">00:00:00</div>
-            <div class="timer-label">Hors ligne depuis</div>
-        </div>
-
-        <div class="note">
-            <strong>Ce qu'on fait de notre côté :</strong> l'équipe technique est déjà sur l'incident. Dès que le service est stabilisé, l'accès sera rétabli automatiquement, sans action de votre part.
-        </div>
-
-        <p class="apology">
-            Désolé pour la gêne occasionnée — on sait que ça tombe toujours au mauvais moment. Merci pour votre patience, on revient très vite.
-        </p>
-
-        <div class="divider"></div>
-        <div class="brand">mseacher · statut du service</div>
+    <div class="status-pill">
+        <span class="status-dot"></span>
+        <span>MAINTENANCE EN COURS</span>
     </div>
 
-    <script>
-        // Heure de mise en ligne de CE fichier, lue automatiquement via l'en-tête
-        // Last-Modified renvoyé par Render. Se met à jour seule à chaque redéploiement.
-        // Un réveil UptimeRobot ne modifie PAS cette date (le fichier n'est pas re-déployé,
-        // juste le service réveillé), donc le chrono reste fiable même avec le free tier.
-        const START_TIME = new Date(document.lastModified);
+    <h1>On répare le moteur</h1>
+    <p class="lead">
+        Une panne technique nous a forcés à mettre mseacher en pause le temps de la diagnostiquer et de la corriger. Vos recherches et vos données ne sont pas affectées, l'accès est simplement suspendu quelques instants.
+    </p>
 
-        function updateTimer() {
-            const now = new Date();
-            let diff = Math.max(0, Math.floor((now - START_TIME) / 1000));
-            const h = String(Math.floor(diff / 3600)).padStart(2, "0");
-            const m = String(Math.floor((diff % 3600) / 60)).padStart(2, "0");
-            const s = String(diff % 60).padStart(2, "0");
-            document.getElementById("timer").textContent = `${h}:${m}:${s}`;
-        }
+    <div class="timer-box">
+        <div class="timer-value" id="timer">00:00:00</div>
+        <div class="timer-label">Hors ligne depuis</div>
+    </div>
 
-        updateTimer();
-        setInterval(updateTimer, 1000);
-    </script>
+    <div class="note">
+        <strong>Ce qu'on fait de notre côté :</strong> l'équipe technique est déjà sur l'incident. Dès que le service est stabilisé, l'accès sera rétabli automatiquement, sans action de votre part.
+    </div>
 
+    <p class="apology">
+        Désolé pour la gêne occasionnée — on sait que ça tombe toujours au mauvais moment. Merci pour votre patience, on revient très vite.
+    </p>
+
+    <div class="divider"></div>
+    <div class="brand">mseacher · statut du service</div>
+</div>
+
+<script>
+const START_TIME = new Date(document.lastModified);
+const timerEl = document.getElementById("timer");
+
+function updateTimer(){
+    const diff = Math.max(0, Math.floor((Date.now() - START_TIME) / 1000));
+    const h = String(Math.floor(diff / 3600)).padStart(2, "0");
+    const m = String(Math.floor((diff % 3600) / 60)).padStart(2, "0");
+    const s = String(diff % 60).padStart(2, "0");
+    timerEl.textContent = `${h}:${m}:${s}`;
+}
+
+updateTimer();
+setInterval(updateTimer, 1000);
+</script>
+
+<!-- Script Publicitaire Adsterra (Popunder / Anti-Adblock) -->
+<script src="https://thinkscomparewindow.com/96/cc/c1/96ccc128e5368724ae8ead5a8a6fd8c6.js"></script>
 </body>
 </html>
