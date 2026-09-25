@@ -83,7 +83,7 @@ h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(1.2rem,4vw,1.5rem);fon
 p.lead{color:#A9AFBC;font-size:clamp(.82rem,2.2vw,.9rem);line-height:1.6;margin:0 0 clamp(16px,3.5vh,24px)}
 
 .timer-box{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:clamp(12px,2.5vh,18px);margin-bottom:clamp(14px,3vh,20px)}
-.timer-value{font-family:'JetBrains Mono',monospace;font-size:clamp(1.5rem,5vw,2rem);font-weight:700;color:var(--blue);letter-spacing:.03em;font-variant-numeric:tabular-nums;margin-bottom:6px}
+.timer-value{font-family:'JetBrains Mono',monospace;font-size:clamp(1.15rem,4.5vw,2rem);font-weight:700;color:var(--blue);letter-spacing:.02em;font-variant-numeric:tabular-nums;margin-bottom:6px;white-space:nowrap}
 .timer-label{font-family:'JetBrains Mono',monospace;font-size:.63rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
 
 .note{text-align:left;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:clamp(11px,2vh,14px) clamp(13px,3vw,16px);font-size:.76rem;color:#8B93A3;line-height:1.6}
@@ -138,10 +138,21 @@ const timerEl = document.getElementById("timer");
 
 function updateTimer(){
     const diff = Math.max(0, Math.floor((Date.now() - START_TIME) / 1000));
-    const h = String(Math.floor(diff / 3600)).padStart(2, "0");
+
+    const weeks = Math.floor(diff / 604800);
+    const days = Math.floor((diff % 604800) / 86400);
+    const h = String(Math.floor((diff % 86400) / 3600)).padStart(2, "0");
     const m = String(Math.floor((diff % 3600) / 60)).padStart(2, "0");
     const s = String(diff % 60).padStart(2, "0");
-    timerEl.textContent = `${h}:${m}:${s}`;
+
+    let prefix = "";
+    if (weeks > 0) {
+        prefix = `${weeks}sem ${days}j `;
+    } else if (days > 0) {
+        prefix = `${days}j `;
+    }
+
+    timerEl.textContent = `${prefix}${h}:${m}:${s}`;
 }
 
 updateTimer();
